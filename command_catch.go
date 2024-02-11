@@ -10,14 +10,14 @@ func callbackCatch(cfg *config, args ...string) error {
   if len(args) != 1 {
 		return errors.New("no pokemon name provided")
 	}
-	locationAreaName := args[0]
-	resp, err := cfg.pokeapiClient.GetPokemon(locationAreaName)
+	pokemonName := args[0]
+	resp, err := cfg.pokeapiClient.GetPokemon(pokemonName)
 
 	if err != nil {
 		return err
 	}
 
-	const threshold = 50
+	var threshold = int(float64(resp.BaseExperience)*0.4)
 	randCatch := rand.Intn(resp.BaseExperience)
 
 	if randCatch > threshold {
@@ -25,7 +25,7 @@ func callbackCatch(cfg *config, args ...string) error {
 	}
 
 	cfg.caughtPokemon[resp.Name] = resp
-	// fmt.Printf("%s was caught\n", resp.Name)
+	fmt.Printf("%s was caught\n", resp.Name)
 
 	return nil
 }
