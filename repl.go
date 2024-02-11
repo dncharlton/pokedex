@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func startRepl() {
+func startRepl(cfg *config) {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		// Print Prompt
@@ -15,20 +15,24 @@ func startRepl() {
 		scanner.Scan()
 
 		// Grab and clean input, skip if empty
-		text := cleanInput(scanner.Text())
-		if len(text) == 0 { continue }
+		cleaned := cleanInput(scanner.Text())
+		if len(cleaned) == 0 { continue }
 
 		// do some task
 		// fmt.Println("echoing: ", text)
-		commandName := text[0]
-		command, ok := getCommands()[commandName]
+		command, ok := getCommands()[cleaned[0]]
+		args := []string{}
+		if len(cleaned) > 1 {
+			args = cleaned[1:]
+		}
 
 		if !ok {
 			fmt.Println(command.name, ": Command Not Found")
 			continue
 		}
 
-		command.callback()
+		err := command.callback(cfg, args...)
+		if err != nil { fmt.Println(err) }
 	}
 }
 
@@ -39,7 +43,7 @@ func cleanInput(str string) []string{
 type cliCommand struct {
 	name 				string
   description string
-	callback 		func()
+	callback 		func(*config, ...string) error
 }
 
 func getCommands() map[string]cliCommand {
@@ -63,6 +67,16 @@ func getCommands() map[string]cliCommand {
 			name: "mapb",
 			description: "Displays the previous 20 locations",
 			callback: callbackMapB,
+		},
+		"explore": {
+			name: "explore {location_area}",
+			description: "Lists the pokemon encounters in a location",
+			callback: callbackExplore,
+		},
+		"catch": {
+			name: "catch {pokemon_name}",
+			description: "Catches a pokemon",
+			callback: callbackCatch,
 		},
 	}
 }
